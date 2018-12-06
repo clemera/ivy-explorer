@@ -102,7 +102,7 @@ menu string as `cdr'."
   (with-temp-buffer
     (let* ((length (apply 'max
                           (mapcar #'string-width strings)))
-           (wwidth (frame-width))
+           (wwidth (or width (frame-width)))
            (columns (min (or cols 4) (/ wwidth (+ 2 length))))
            (colwidth (/ wwidth columns))
            (column 0)
