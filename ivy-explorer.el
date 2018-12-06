@@ -257,8 +257,7 @@ Even for the same string.")
              (avy--style-fn avy-style)))))
     (when (number-or-marker-p candidate)
       (ivy-set-index
-       (+ ivy--index
-          (get-text-property candidate 'ivy-explorer-count)))
+       (get-text-property candidate 'ivy-explorer-count))
       (run-at-time 0 nil (or action 'ivy-alt-done))))))
 
 ;; adapted from ivy-hydra
