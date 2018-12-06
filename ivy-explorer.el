@@ -52,7 +52,7 @@
 (defcustom ivy-explorer-enable-counsel-explorer t
   "If non-nil remap `find-file' to `counsel-explorer'.
 
-This will also override remappings of `counsel-mode' for
+This will also override remappings of function/`counsel-mode' for
 `find-file' (`counsel-find-file').
 
 This variable has to be (un)set before loading `ivy-explorer' to
@@ -63,7 +63,7 @@ take effect."
 (defcustom ivy-explorer-use-separator t
   "Whether to draw a line as separator.
 
-Line is drawn between the ivy-explorer window and the Echo Area."
+Line is drawn between the ivy explorer window and the Echo Area."
   :group 'ivy-explorer
   :type 'boolean)
 
@@ -91,13 +91,14 @@ Only the background color is significant."
 (defvar ivy-explorer--col-n nil
   "Current columns size of grid.")
 
-(defun ivy-explorer--get-menu-string (strings &optional cols)
+(defun ivy-explorer--get-menu-string (strings &optional cols width)
   "Given a list of STRINGS create a menu string.
 
-The menu string will be segmented into columns based on WIDTH
-which default to frame width. If COL is given use at max COL
-columns (defaults to 4). Returns a cons cell with the number of
-columns created as the `car' and the menu string as `cdr'."
+The menu string will be segmented into columns. If COLS is given
+use at max COLS columns (defaults to 4). Decision for number of
+columns is based on WIDTH which default to frame width. Returns a
+cons cell with the number of columns created as the `car' and the
+menu string as `cdr'."
   (with-temp-buffer
     (let* ((length (apply 'max
                           (mapcar #'string-width strings)))
@@ -139,7 +140,7 @@ columns created as the `car' and the menu string as `cdr'."
 Even for the same string.")
 
 (defun ivy-explorer--lv ()
-  "Ensure that ivy-explorer window is live and return it."
+  "Ensure that ivy explorer window is live and return it."
   (if (window-live-p ivy-explorer--window)
       ivy-explorer--window
     (let ((ori (selected-window))
@@ -162,7 +163,7 @@ Even for the same string.")
         (select-window ori)))))
 
 (defun ivy-explorer--lv-message (format-string &rest args)
-  "Set ivy-explorer window contents to (`format' FORMAT-STRING ARGS)."
+  "Set ivy explorer window contents to (`format' FORMAT-STRING ARGS)."
   (let* ((str (apply #'format format-string args))
          (n-lines (cl-count ?\n str))
          deactivate-mark
@@ -188,14 +189,14 @@ Even for the same string.")
       (goto-char (point-min)))))
 
 (defun ivy-explorer--lv-delete-window ()
-  "Delete ivy-explorer window and kill its buffer."
+  "Delete ivy explorer window and kill its buffer."
   (when (window-live-p ivy-explorer--window)
     (let ((buf (window-buffer ivy-explorer--window)))
       (delete-window ivy-explorer--window)
       (kill-buffer buf))))
 
 (defun ivy-explorer--message (message)
-  "Show MESSAGE in `ivy-explorer--window'"
+  "Show MESSAGE in `ivy-explorer--window'."
   (let ((ivy-explorer-lv-force-update t)
         (window-size-fixed nil))
     (ivy-explorer--lv-message message)))
@@ -204,7 +205,9 @@ Even for the same string.")
 
 ;; Ivy explorer avy, adapted from ivy-avy
 (defun ivy-explorer-avy (&optional action)
-  "Jump to one of the current candidates using `avy'."
+  "Jump to one of the current candidates using `avy'.
+
+If called from code ACTION is the action to trigger afterwards."
   (interactive)
   (with-selected-window (ivy-explorer--lv)
     (unless (require 'avy nil 'noerror)
@@ -379,14 +382,14 @@ Call the permanent action if possible.")
       (define-key map (kbd "C-p") 'ivy-explorer-previous)
       (define-key map (kbd "C-M-n") 'ivy-explorer-next-and-call)
       (define-key map (kbd "C-M-p") 'ivy-explorer-previous-and-call)))
-  "Keymap used in the minibuffer for `ivy-explorer-mode'.")
+  "Keymap used in the minibuffer for function/`ivy-explorer-mode'.")
 
 (defun ivy-explorer-max ()
   "Default for `ivy-explorer-max-function'."
   (* 2 (frame-height)))
 
 (defun ivy-explorer--display-function (text)
-  "Function to be used as `ivy-display-function'."
+  "Displays TEXT as `ivy-display-function'."
   (let* ((strings (or (split-string text "\n" t)
                       (list "")))
          (menu (ivy-explorer--get-menu-string
@@ -411,12 +414,14 @@ Call the permanent action if possible.")
 (defun ivy-explorer (&rest args)
   "Function to be used as `read-file-name-function'.
 
-`ivy-mode' has to be enabled for this function to work."
+ARGS are bassed to `read-file-name-default'."
   (apply #'ivy--explorer #'read-file-name-default args))
 
 
 (defun counsel-explorer (&optional initial-input)
-  "`counsel-find-file' version for `ivy-explorer-mode'."
+  "`counsel-find-file' version for ivy explorer.
+
+INITIAL-INPUT is passed to `counsel-find-file'."
   (interactive)
   (apply #'ivy--explorer #'counsel-find-file initial-input))
 
@@ -426,11 +431,11 @@ Call the permanent action if possible.")
       (when ivy-explorer-enable-counsel-explorer
         (define-key map
           [remap find-file] #'counsel-explorer))))
-  "Keymap for `ivy-explorer-mode'.")
+  "Keymap for function/`ivy-explorer-mode'.")
 
 ;; from lispy.el
 (defun ivy-explorer-raise ()
-  "Make `ivy-explorer-mode' the first on `minor-mode-map-alist'."
+  "Make function/`ivy-explorer-mode' the first on `minor-mode-map-alist'."
   (let ((x (assq #'ivy-explorer-mode minor-mode-map-alist)))
     (when x
       (setq minor-mode-map-alist
