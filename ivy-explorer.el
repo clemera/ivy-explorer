@@ -399,7 +399,7 @@ Call the permanent action if possible.")
     (setq ivy-explorer--col-n mcols)
     (ivy-explorer--message mstring)))
 
-(defun ivy--explorer (f &rest args)
+(defun ivy-explorer--internal (f &rest args)
   "Invoke ivy explorer for F with ARGS."
   (let ((ivy-display-function  #'ivy-explorer--display-function)
         (completing-read-function 'ivy-completing-read)
@@ -415,7 +415,7 @@ Call the permanent action if possible.")
   "Function to be used as `read-file-name-function'.
 
 ARGS are bassed to `read-file-name-default'."
-  (apply #'ivy--explorer #'read-file-name-default args))
+  (apply #'ivy-explorer--internal #'read-file-name-default args))
 
 
 (defun counsel-explorer (&optional initial-input)
@@ -423,7 +423,7 @@ ARGS are bassed to `read-file-name-default'."
 
 INITIAL-INPUT is passed to `counsel-find-file'."
   (interactive)
-  (apply #'ivy--explorer #'counsel-find-file initial-input))
+  (apply #'ivy-explorer--internal #'counsel-find-file initial-input))
 
 (defvar ivy-explorer-mode-map
   (let ((map (make-sparse-keymap)))
@@ -458,6 +458,7 @@ When `ivy-explorer-enable-counsel-explorer' (by default it is),
 
 See `ivy-explorer-map' for bindings used in the minibuffer."
   :group 'ivy-explorer
+  :require 'ivy-explorer
   :global t
   :init-value nil
   :lighter " ivy-explorer"
