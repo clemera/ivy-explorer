@@ -4,7 +4,7 @@
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
 ;; URL: https://github.com/clemera/ivy-explorer
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Package-Requires: ((emacs "25") (ivy "0.10.0"))
 ;; Keywords: convenience, files, matching
 
@@ -320,11 +320,14 @@ If called from code ACTION is the action to trigger afterwards."
 (defun ivy-explorer-next (arg)
   "Move cursor vertically down ARG candidates."
   (interactive "p")
-  (let ((n (* arg ivy-explorer--col-n))
-        (max (1- ivy--length)))
+  (let* ((n (* arg ivy-explorer--col-n))
+         (max (1- ivy--length))
+         (colmax (- max (% (- max ivy--index) n))))
     (ivy-set-index
-     (min (- max (% (- max ivy--index) n))
-          (+ ivy--index n)))))
+     (if (= ivy--index -1)
+         0
+       (min colmax
+            (+ ivy--index n))))))
 
 (defun ivy-explorer-next-and-call (arg)
   "Move cursor down ARG candidates.
@@ -337,10 +340,14 @@ Call the permanent action if possible."
 (defun ivy-explorer-previous (arg)
   "Move cursor vertically up ARG candidates."
   (interactive "p")
-  (let ((n (* arg ivy-explorer--col-n)))
+  (let* ((n (* arg ivy-explorer--col-n))
+         (colmin (% ivy--index n)))
     (ivy-set-index
-     (max (% ivy--index n)
-          (- ivy--index n)))))
+     (if (and (= ivy--index 0)
+              ivy-use-selectable-prompt)
+         -1
+       (max colmin
+            (- ivy--index n))))))
 
 (defun ivy-explorer-previous-and-call (arg)
   "Move cursor up ARG candidates.
