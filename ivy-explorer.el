@@ -371,6 +371,7 @@ Call the permanent action if possible.")
     (prog1 map
       (define-key map (kbd "C-x d") 'ivy-explorer-dired)
 
+      (define-key map (kbd "C-'") 'ivy-explorer-avy)
       (define-key map (kbd ",") 'ivy-explorer-avy)
       (define-key map (kbd ";") 'ivy-explorer-avy-dispatch)
       ;; TODO: create C-o ivy-explorer-hydra
