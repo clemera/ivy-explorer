@@ -129,8 +129,8 @@ menu string as `cdr'."
 
 ;; * Ivy explorer window, adapted from lv.el
 
-(defvar display-line-numbers nil)
-(defvar golden-ratio-mode nil)
+(defvar display-line-numbers)
+(defvar golden-ratio-mode)
 
 (defvar ivy-explorer--window nil
   "Holds the current ivy explorer window.")
@@ -264,8 +264,7 @@ If called from code ACTION is the action to trigger afterwards."
       (run-at-time 0 nil (or action 'ivy-alt-done))))))
 
 ;; adapted from ivy-hydra
-(defvar ivy-dispatching-done-columns 2
-  "Number of columns to use if the hint does not fit on one line.")
+
 
 (defun ivy-explorer-avy-dispatching-done-hydra ()
   "Choose action and afterwards target using `hydra'."
@@ -277,7 +276,9 @@ If called from code ACTION is the action to trigger afterwards."
                                   (format "[%s] %s" (nth 0 x) (nth 2 x)))
                                 (cdr actions) ", "))))
          (n-columns (if (> estimated-len (window-width))
-                        ivy-dispatching-done-columns
+                        (or (and (bound-and-true-p ivy-dispatching-done-columns)
+                                 ivy-dispatching-done-columns)
+                            2)
                       nil)))
     (if (null (ivy--actionp actions))
         (ivy-done)
