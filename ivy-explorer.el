@@ -78,8 +78,7 @@ Line is drawn between the ivy explorer window and the Echo Area."
   :type 'function)
 
 (defface ivy-explorer-separator
-  '((((class color) (background light)) :background "grey80")
-    (((class color) (background  dark)) :background "grey30"))
+  '((t (:inherit lv-separator)))
   "Face used to draw line between the ivy-explorer window and the echo area.
 This is only used if option `ivy-explorer-use-separator' is non-nil.
 Only the background color is significant."
