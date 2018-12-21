@@ -322,14 +322,16 @@ If called from code ACTION is the action to trigger afterwards."
 (defun ivy-explorer-next (arg)
   "Move cursor vertically down ARG candidates."
   (interactive "p")
-  (let* ((n (* arg ivy-explorer--col-n))
-         (max (1- ivy--length))
-         (colmax (- max (% (- max ivy--index) n))))
-    (ivy-set-index
-     (if (= ivy--index -1)
-         0
-       (min colmax
-            (+ ivy--index n))))))
+  (if (> (minibuffer-depth) 1)
+      (call-interactively 'ivy-next-line)
+    (let* ((n (* arg ivy-explorer--col-n))
+           (max (1- ivy--length))
+           (colmax (- max (% (- max ivy--index) n))))
+      (ivy-set-index
+       (if (= ivy--index -1)
+           0
+         (min colmax
+              (+ ivy--index n)))))))
 
 (defun ivy-explorer-next-and-call (arg)
   "Move cursor down ARG candidates.
@@ -342,14 +344,16 @@ Call the permanent action if possible."
 (defun ivy-explorer-previous (arg)
   "Move cursor vertically up ARG candidates."
   (interactive "p")
-  (let* ((n (* arg ivy-explorer--col-n))
-         (colmin (% ivy--index n)))
-    (ivy-set-index
-     (if (and (= ivy--index 0)
-              ivy-use-selectable-prompt)
-         -1
-       (max colmin
-            (- ivy--index n))))))
+  (if (> (minibuffer-depth) 1)
+      (call-interactively 'ivy-previous-line)
+    (let* ((n (* arg ivy-explorer--col-n))
+           (colmin (% ivy--index n)))
+      (ivy-set-index
+       (if (and (= ivy--index 0)
+                ivy-use-selectable-prompt)
+           -1
+         (max colmin
+              (- ivy--index n)))))))
 
 (defun ivy-explorer-previous-and-call (arg)
   "Move cursor up ARG candidates.
