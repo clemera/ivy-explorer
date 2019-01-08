@@ -1,6 +1,6 @@
 ;;; ivy-explorer.el --- Dynamic file browsing grid using ivy  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018  Clemens Radermacher
+;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; Author: Clemens Radermacher <clemera@posteo.net>
 ;; URL: https://github.com/clemera/ivy-explorer
