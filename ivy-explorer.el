@@ -347,7 +347,7 @@ in this case `avy' is not invoked again."
      (lambda ()
        (let ((action (ivy-read-action)))
          (when action
-           (ivy-set-action (ivy-read-action))
+           (ivy-set-action action)
            (ivy-done)))))))
 
 (defun ivy-explorer-dired ()
