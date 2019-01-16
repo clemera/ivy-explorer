@@ -317,11 +317,16 @@ in this case `avy' is not invoked again."
            (ivy-done)))))))
 
 (defun ivy-explorer-dired ()
-  "Open current directory in `dired'."
+  "Open current directory in `dired'.
+
+Move to file which was current on exit."
   (interactive)
-  (ivy--cd ivy--directory)
-  (ivy--exhibit)
-  (ivy-done))
+  (let ((curr (ivy-state-current ivy-last)))
+    (ivy--cd ivy--directory)
+    (ivy--exhibit)
+    (run-at-time 0 nil #'dired-goto-file
+                 (expand-file-name curr ivy--directory))
+    (ivy-done)))
 
 (defun ivy-explorer-next (arg)
   "Move cursor vertically down ARG candidates."
