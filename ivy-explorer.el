@@ -148,9 +148,14 @@ Even for the same string.")
        (call-interactively ',cmd)
        (ivy--exhibit))))
 
+(defun ivy-explorer-select-mini ()
+  (interactive)
+  (select-window (minibuffer-window)))
+
 (defvar ivy-explorer-lv-mode-map
   (let ((map (make-sparse-keymap)))
     (prog1 map
+      (suppress-keymap map)
       (define-key map (kbd "C-g") (defun ivy-explorer-lv-quit ()
                                     (interactive)
                                     (with-selected-window (minibuffer-window)
@@ -162,9 +167,8 @@ Even for the same string.")
       (define-key map (kbd "RET") (ivy-explorer--lv-command ivy-alt-done))
       (define-key map (kbd "DEL") (ivy-explorer--lv-command ivy-backward-delete-char))
       (define-key map "," (ivy-explorer--lv-command ivy-explorer-avy))
-      (define-key map (kbd "C-x o") (defun ivy-explorer-select-mini ()
-                                      (interactive)
-                                      (select-window (minibuffer-window)))))))
+      (define-key map (kbd "C-x o") 'ivy-explorer-select-mini)
+      (define-key map (kbd "'") 'ivy-explorer-select-mini))))
 
 (define-minor-mode ivy-explorer-lv-mode
   "Mode for buffer showing the grid.")
@@ -418,10 +422,18 @@ Call the permanent action if possible.")
 
 ;; * Ivy explorer mode
 
+(defun ivy-explorer-select-lv ()
+  (interactive)
+  (select-window (get-buffer-window " *ivy-explorer*")))
+
 (defvar ivy-explorer-map
   (let ((map (make-sparse-keymap)))
     (prog1 map
       (define-key map (kbd "C-x d") 'ivy-explorer-dired)
+
+      (define-key map (kbd "C-x o") 'ivy-explorer-select-lv)
+      (define-key map (kbd "'") 'ivy-explorer-select-lv)
+
       (define-key map (kbd "M-o") 'ivy-explorer-dispatching-done)
       (define-key map (kbd "C-'") 'ivy-explorer-avy)
       (define-key map (kbd ",") 'ivy-explorer-avy)
