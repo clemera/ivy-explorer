@@ -140,6 +140,35 @@ menu string as `cdr'."
   "When non-nil, `ivy-explorer--lv-message' will refresh.
 Even for the same string.")
 
+
+(defmacro ivy-explorer--lv-command (cmd)
+  `(defun ,(intern (format "%s-lv" (symbol-name cmd))) ()
+     (interactive)
+     (with-selected-window (minibuffer-window)
+       (call-interactively ',cmd)
+       (ivy--exhibit))))
+
+(defvar ivy-explorer-lv-mode-map
+  (let ((map (make-sparse-keymap)))
+    (prog1 map
+      (define-key map (kbd "C-g") (defun ivy-explorer-lv-quit ()
+                                    (interactive)
+                                    (with-selected-window (minibuffer-window)
+                                      (minibuffer-keyboard-quit))))
+      (define-key map "n" (ivy-explorer--lv-command ivy-explorer-next))
+      (define-key map "p" (ivy-explorer--lv-command ivy-explorer-previous))
+      (define-key map "f" (ivy-explorer--lv-command ivy-explorer-forward))
+      (define-key map "b" (ivy-explorer--lv-command ivy-explorer-backward))
+      (define-key map (kbd "RET") (ivy-explorer--lv-command ivy-alt-done))
+      (define-key map (kbd "DEL") (ivy-explorer--lv-command ivy-backward-delete-char))
+      (define-key map "," (ivy-explorer--lv-command ivy-explorer-avy))
+      (define-key map (kbd "C-x o") (defun ivy-explorer-select-mini ()
+                                      (interactive)
+                                      (select-window (minibuffer-window)))))))
+
+(define-minor-mode ivy-explorer-lv-mode
+  "Mode for buffer showing the grid.")
+
 (defun ivy-explorer--lv ()
   "Ensure that ivy explorer window is live and return it."
   (if (window-live-p ivy-explorer--window)
@@ -155,6 +184,7 @@ Even for the same string.")
             (switch-to-buffer buf)
           (switch-to-buffer " *ivy-explorer*")
           (set-window-hscroll ivy-explorer--window 0)
+          (ivy-explorer-lv-mode 1)
           (setq window-size-fixed t)
           (setq mode-line-format nil)
           (setq cursor-type nil)
@@ -392,7 +422,7 @@ Call the permanent action if possible.")
   (let ((map (make-sparse-keymap)))
     (prog1 map
       (define-key map (kbd "C-x d") 'ivy-explorer-dired)
-
+      (define-key map (kbd "M-o") 'ivy-explorer-dispatching-done)
       (define-key map (kbd "C-'") 'ivy-explorer-avy)
       (define-key map (kbd ",") 'ivy-explorer-avy)
       (define-key map (kbd ";") 'ivy-explorer-avy-dispatch)
@@ -432,6 +462,17 @@ Call the permanent action if possible.")
         (ivy-minibuffer-map (make-composed-keymap
                              ivy-explorer-map ivy-minibuffer-map)))
     (apply f args)))
+
+
+(defun ivy-explorer-dispatching-done ()
+  "Select one of the available actions and call `ivy-done'."
+  (interactive)
+  (let ((window (selected-window)))
+    (unwind-protect
+        (when (ivy-read-action)
+          (ivy-done))
+      (when (window-live-p window)
+        (window-resize nil (- 1 (window-height)))))))
 
 
 (defun ivy-explorer (&rest args)
