@@ -377,8 +377,39 @@ Move to file which was current on exit."
          (min colmax
               (+ ivy--index n)))))))
 
+(defun ivy-explorer-eol ()
+  "Move cursor to last column."
+  (interactive)
+  (let ((cc (1+ (% ivy--index ivy-explorer--col-n))))
+    (ivy-explorer-forward  (- ivy-explorer--col-n cc))))
+
+(defun ivy-explorer-eol-and-call ()
+  "Move cursor to last column.
+
+Call the permanent action if possible."
+  (interactive)
+  (ivy-explorer-eol)
+  (ivy--exhibit)
+  (ivy-call))
+
+(defun ivy-explorer-bol ()
+  "Move cursor to first column."
+  (interactive)
+  (let ((cc (1+ (% ivy--index ivy-explorer--col-n))))
+    (ivy-explorer-backward  (1- cc))))
+
+(defun ivy-explorer-bol-and-call ()
+  "Move cursor to first column.
+
+Call the permanent action if possible."
+  (interactive)
+  (ivy-explorer-bol)
+  (ivy--exhibit)
+  (ivy-call))
+
 (defun ivy-explorer-next-and-call (arg)
   "Move cursor down ARG candidates.
+
 Call the permanent action if possible."
   (interactive "p")
   (ivy-explorer-next arg)
@@ -444,6 +475,12 @@ Call the permanent action if possible.")
       (define-key map (kbd "C-b") 'ivy-explorer-backward)
       (define-key map (kbd "C-M-f") 'ivy-explorer-forward-and-call)
       (define-key map (kbd "C-M-b") 'ivy-explorer-backward-and-call)
+
+      (define-key map (kbd "C-a") 'ivy-explorer-bol)
+      (define-key map (kbd "C-e") 'ivy-explorer-eol)
+      (define-key map (kbd "C-M-a") 'ivy-explorer-bol-and-call)
+      (define-key map (kbd "C-M-e") 'ivy-explorer-eol-and-call)
+
       (define-key map (kbd "C-n") 'ivy-explorer-next)
       (define-key map (kbd "C-p") 'ivy-explorer-previous)
       (define-key map (kbd "C-M-n") 'ivy-explorer-next-and-call)
