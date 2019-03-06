@@ -132,6 +132,7 @@ menu string as `cdr'."
 
 (defvar display-line-numbers)
 (defvar golden-ratio-mode)
+(defvar ivy-posframe-hide-minibuffer)
 
 (defvar ivy-explorer--window nil
   "Holds the current ivy explorer window.")
@@ -381,7 +382,7 @@ Move to file which was current on exit."
   "Move cursor to last column."
   (interactive)
   (let ((ci (% ivy--index ivy-explorer--col-n)))
-    (ivy-explorer-forward  (- (1- ivy-explorer--col-n) ci))))
+    (ivy-explorer-forward (- (1- ivy-explorer--col-n) ci))))
 
 (defun ivy-explorer-eol-and-call ()
   "Move cursor to last column.
@@ -396,7 +397,7 @@ Call the permanent action if possible."
   "Move cursor to first column."
   (interactive)
   (let ((ci (% ivy--index ivy-explorer--col-n)))
-    (ivy-explorer-backward  ci)))
+    (ivy-explorer-backward ci)))
 
 (defun ivy-explorer-bol-and-call ()
   "Move cursor to first column.
@@ -505,6 +506,7 @@ Call the permanent action if possible.")
 (defun ivy-explorer--internal (f &rest args)
   "Invoke ivy explorer for F with ARGS."
   (let ((ivy-display-function  #'ivy-explorer--display-function)
+        (ivy-posframe-hide-minibuffer nil)
         (completing-read-function 'ivy-completing-read)
         ;; max number of candidates
         (ivy-height (funcall ivy-explorer-max-function))
