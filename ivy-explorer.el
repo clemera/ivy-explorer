@@ -142,11 +142,6 @@ menu string as `cdr'."
 (defvar ivy-explorer--window nil
   "Holds the current ivy explorer window.")
 
-(defvar ivy-explorer-lv-force-update nil
-  "When non-nil, `ivy-explorer--lv-message' will refresh.
-Even for the same string.")
-
-
 (defmacro ivy-explorer--lv-command (cmd)
   `(defun ,(intern (format "%s-lv" (symbol-name cmd))) ()
      (interactive)
@@ -207,13 +202,11 @@ Even for the same string.")
 (defun ivy-explorer--lv-message (str)
   "Set ivy explorer window contents to string STR."
   (let* ((n-lines (cl-count ?\n str))
-         (ivy-explorer-lv-force-update t)
          (window-size-fixed nil)
          deactivate-mark
          golden-ratio-mode)
     (with-selected-window (ivy-explorer--lv)
-      (unless (and (string= (buffer-string) str)
-                   (null ivy-explorer-lv-force-update))
+      (unless (string= (buffer-string) str)
         (delete-region (point-min) (point-max))
         (insert str)
         (when (and (window-system) ivy-explorer-use-separator)
