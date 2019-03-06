@@ -82,6 +82,11 @@ Line is drawn between the ivy explorer window and the Echo Area."
   :group 'ivy-explorer
   :type 'function)
 
+(defcustom ivy-explorer-auto-init-avy nil
+  "Whether to load grid views with avy selection enabled by default."
+  :group 'ivy-explorer
+  :type 'boolean)
+
 (defface ivy-explorer-separator
   (if (featurep 'lv)
       '((t (:inherit lv-separator)))
@@ -91,6 +96,37 @@ This is only used if option `ivy-explorer-use-separator' is non-nil.
 Only the background color is significant."
   :group 'ivy-explorer)
 
+
+(defvar ivy-explorer-map
+  (let ((map (make-sparse-keymap)))
+    (prog1 map
+      (define-key map (kbd "DEL") 'ivy-explorer-backward-delete-char)
+      (define-key map (kbd "C-j") 'ivy-explorer-alt-done)
+      (define-key map (kbd "C-x d") 'ivy-explorer-dired)
+
+      (define-key map (kbd "C-x o") 'ivy-explorer-select-lv)
+      (define-key map (kbd "'") 'ivy-explorer-select-lv)
+
+      (define-key map (kbd "M-o") 'ivy-explorer-dispatching-done)
+      (define-key map (kbd "C-'") 'ivy-explorer-avy)
+      (define-key map (kbd ",") 'ivy-explorer-avy)
+      (define-key map (kbd ";") 'ivy-explorer-avy-dispatch)
+      ;; TODO: create C-o ivy-explorer-hydra
+      (define-key map (kbd "C-f") 'ivy-explorer-forward)
+      (define-key map (kbd "C-b") 'ivy-explorer-backward)
+      (define-key map (kbd "C-M-f") 'ivy-explorer-forward-and-call)
+      (define-key map (kbd "C-M-b") 'ivy-explorer-backward-and-call)
+
+      (define-key map (kbd "C-a") 'ivy-explorer-bol)
+      (define-key map (kbd "C-e") 'ivy-explorer-eol)
+      (define-key map (kbd "C-M-a") 'ivy-explorer-bol-and-call)
+      (define-key map (kbd "C-M-e") 'ivy-explorer-eol-and-call)
+
+      (define-key map (kbd "C-n") 'ivy-explorer-next)
+      (define-key map (kbd "C-p") 'ivy-explorer-previous)
+      (define-key map (kbd "C-M-n") 'ivy-explorer-next-and-call)
+      (define-key map (kbd "C-M-p") 'ivy-explorer-previous-and-call)))
+  "Keymap used in the minibuffer for function/`ivy-explorer-mode'.")
 
 ;; * Ivy explorer menu
 
@@ -234,6 +270,27 @@ menu string as `cdr'."
 
 ;; * Minibuffer commands
 
+(defun ivy-explorer--ace-handler (char)
+  "Execute buffer-expose action for CHAR."
+  (cond ((memq char '(27 ?\C-g ?,))
+         ;; exit silently
+         (throw 'done 'exit))
+        ((mouse-event-p char)
+         (signal 'user-error (list "Mouse event not handled" char)))
+        (t
+         (require 'edmacro)
+         (let* ((key (kbd (edmacro-format-keys (vector char))))
+                (cmd (or (lookup-key ivy-explorer-map key)
+                         (key-binding key))))
+           (if (commandp cmd)
+               (progn (call-interactively cmd)
+                      (run-at-time 0 nil #'ivy--exhibit)
+                      (throw 'done 'exit))
+             (message "No such candidate: %s, hit `C-g' to quit."
+                      (if (characterp char) (string char) char))
+             (throw 'done 'restart))))))
+
+
 ;; Ivy explorer avy, adapted from ivy-avy
 (defun ivy-explorer-avy (&optional action)
   "Jump to one of the current candidates using `avy'.
@@ -251,6 +308,7 @@ in this case `avy' is not invoked again."
           (let* ((avy-all-windows nil)
                  (avy-keys (or (cdr (assq 'ivy-avy avy-keys-alist))
                                avy-keys))
+                 (avy-handler-function #'ivy-explorer--ace-handler)
                  (avy-style (or (cdr (assq 'ivy-avy
                                            avy-styles-alist))
                                 avy-style))
@@ -440,6 +498,25 @@ Call the permanent action if possible."
 (defalias 'ivy-explorer-backward #'ivy-previous-line
   "Move cursor backward ARG candidates.")
 
+(defun ivy-explorer-alt-done ()
+  "Like `ivy-alt-done' but respecting `ivy-explorer-auto-init-avy'."
+  (interactive)
+  (with-selected-window (minibuffer-window)
+    (call-interactively 'ivy-alt-done)
+    (when ivy-explorer-auto-init-avy
+      (ivy-explorer-avy))))
+
+(defun ivy-explorer-backward-delete-char ()
+  "Like `ivy-backward-delete-char' but respecting `ivy-explorer-auto-init-avy'."
+  (interactive)
+  (with-selected-window (minibuffer-window)
+    (if (and ivy--directory (= (minibuffer-prompt-end) (point)))
+        (progn (call-interactively 'ivy-backward-delete-char)
+               (when ivy-explorer-auto-init-avy
+                 (ivy-explorer-avy)))
+      (call-interactively 'ivy-backward-delete-char))))
+
+
 (defalias 'ivy-explorer-forward-and-call #'ivy-next-line-and-call
   "Move cursor forward ARG candidates.
 Call the permanent action if possible.")
@@ -453,35 +530,6 @@ Call the permanent action if possible.")
 (defun ivy-explorer-select-lv ()
   (interactive)
   (select-window (get-buffer-window " *ivy-explorer*")))
-
-(defvar ivy-explorer-map
-  (let ((map (make-sparse-keymap)))
-    (prog1 map
-      (define-key map (kbd "C-x d") 'ivy-explorer-dired)
-
-      (define-key map (kbd "C-x o") 'ivy-explorer-select-lv)
-      (define-key map (kbd "'") 'ivy-explorer-select-lv)
-
-      (define-key map (kbd "M-o") 'ivy-explorer-dispatching-done)
-      (define-key map (kbd "C-'") 'ivy-explorer-avy)
-      (define-key map (kbd ",") 'ivy-explorer-avy)
-      (define-key map (kbd ";") 'ivy-explorer-avy-dispatch)
-      ;; TODO: create C-o ivy-explorer-hydra
-      (define-key map (kbd "C-f") 'ivy-explorer-forward)
-      (define-key map (kbd "C-b") 'ivy-explorer-backward)
-      (define-key map (kbd "C-M-f") 'ivy-explorer-forward-and-call)
-      (define-key map (kbd "C-M-b") 'ivy-explorer-backward-and-call)
-
-      (define-key map (kbd "C-a") 'ivy-explorer-bol)
-      (define-key map (kbd "C-e") 'ivy-explorer-eol)
-      (define-key map (kbd "C-M-a") 'ivy-explorer-bol-and-call)
-      (define-key map (kbd "C-M-e") 'ivy-explorer-eol-and-call)
-
-      (define-key map (kbd "C-n") 'ivy-explorer-next)
-      (define-key map (kbd "C-p") 'ivy-explorer-previous)
-      (define-key map (kbd "C-M-n") 'ivy-explorer-next-and-call)
-      (define-key map (kbd "C-M-p") 'ivy-explorer-previous-and-call)))
-  "Keymap used in the minibuffer for function/`ivy-explorer-mode'.")
 
 (defun ivy-explorer-max ()
   "Default for `ivy-explorer-max-function'."
@@ -509,6 +557,8 @@ Call the permanent action if possible.")
         (ivy-wrap nil)
         (ivy-minibuffer-map (make-composed-keymap
                              ivy-explorer-map ivy-minibuffer-map)))
+    (when ivy-explorer-auto-init-avy
+      (run-at-time 0 nil 'ivy-explorer-avy))
     (apply f args)))
 
 
