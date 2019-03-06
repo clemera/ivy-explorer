@@ -77,6 +77,11 @@ Line is drawn between the ivy explorer window and the Echo Area."
   :group 'ivy-explorer
   :type 'function)
 
+(defcustom ivy-explorer-message-function #'ivy-explorer--lv-message
+  "Function to be used for grid display."
+  :group 'ivy-explorer
+  :type 'function)
+
 (defface ivy-explorer-separator
   (if (featurep 'lv)
       '((t (:inherit lv-separator)))
@@ -202,6 +207,8 @@ Even for the same string.")
 (defun ivy-explorer--lv-message (str)
   "Set ivy explorer window contents to string STR."
   (let* ((n-lines (cl-count ?\n str))
+         (ivy-explorer-lv-force-update t)
+         (window-size-fixed nil)
          deactivate-mark
          golden-ratio-mode)
     (with-selected-window (ivy-explorer--lv)
@@ -231,11 +238,6 @@ Even for the same string.")
       (delete-window ivy-explorer--window)
       (kill-buffer buf))))
 
-(defun ivy-explorer--message (message)
-  "Show MESSAGE in `ivy-explorer--window'."
-  (let ((ivy-explorer-lv-force-update t)
-        (window-size-fixed nil))
-    (ivy-explorer--lv-message message)))
 
 ;; * Minibuffer commands
 
@@ -501,11 +503,12 @@ Call the permanent action if possible.")
          (mcols (car menu))
          (mstring (cdr menu)))
     (setq ivy-explorer--col-n mcols)
-    (ivy-explorer--message mstring)))
+    (funcall ivy-explorer-message-function mstring)))
+
 
 (defun ivy-explorer--internal (f &rest args)
   "Invoke ivy explorer for F with ARGS."
-  (let ((ivy-display-function  #'ivy-explorer--display-function)
+  (let ((ivy-display-function #'ivy-explorer--display-function)
         (ivy-posframe-hide-minibuffer nil)
         (completing-read-function 'ivy-completing-read)
         ;; max number of candidates
