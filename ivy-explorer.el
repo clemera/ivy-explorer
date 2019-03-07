@@ -389,7 +389,11 @@ the menu string as `cdr'."
              (buffer-local-value 'posframe--frame
                                  (get-buffer b)))))
     (with-selected-window w
-      (ivy-explorer--avy-1 b ))))
+      (ivy-explorer--avy-1 b (with-current-buffer b
+                               (save-excursion
+                                 (goto-char (point-min))
+                                 (forward-line 1)
+                                 (point)))))))
 
 (defun ivy-explorer--avy-1 (&optional buffer start end)
   (let ((candidate (avy--process
