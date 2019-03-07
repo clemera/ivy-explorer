@@ -67,7 +67,7 @@ Line is drawn between the ivy explorer window and the Echo Area."
   :group 'ivy-explorer
   :type 'boolean)
 
-(defcustom ivy-explorer-max-columns 4
+(defcustom ivy-explorer-max-columns 5
   "If given the maximal number of columns to use."
   :group 'ivy-explorer
   :type 'integer)
