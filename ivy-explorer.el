@@ -67,7 +67,7 @@ Line is drawn between the ivy explorer window and the Echo Area."
   :group 'ivy-explorer
   :type 'boolean)
 
-(defcustom ivy-explorer-max-columns nil
+(defcustom ivy-explorer-max-columns 4
   "If given the maximal number of columns to use."
   :group 'ivy-explorer
   :type 'integer)
@@ -172,11 +172,11 @@ Only the background color is significant."
 (defvar ivy-explorer--row-n nil
   "Current row size of grid.")
 
-(defun ivy-explorer--get-menu-string (strings &optional cols width)
+(defun ivy-explorer--get-menu-string (strings cols &optional width)
   "Given a list of STRINGS create a menu string.
 
-The menu string will be segmented into columns. If COLS is given
-use at max COLS columns (defaults to 4). Decision for number of
+The menu string will be segmented into columns. COLS is the
+maximum number of columns to use. Decisions to use less number of
 columns is based on WIDTH which defaults to frame width. Returns
 a cons cell with the (columns . rows) created as the `car' and
 the menu string as `cdr'."
@@ -184,7 +184,7 @@ the menu string as `cdr'."
     (let* ((length (apply 'max
                           (mapcar #'string-width strings)))
            (wwidth (or width (frame-width)))
-           (columns (min (or cols 4) (/ wwidth (+ 2 length))))
+           (columns (min cols (/ wwidth (+ 2 length))))
            (rows 1)
            (colwidth (/ wwidth columns))
            (column 0)
