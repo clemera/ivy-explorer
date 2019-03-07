@@ -161,19 +161,23 @@ Only the background color is significant."
 (defvar ivy-explorer--col-n nil
   "Current columns size of grid.")
 
+(defvar ivy-explorer--row-n nil
+  "Current row size of grid.")
+
 (defun ivy-explorer--get-menu-string (strings &optional cols width)
   "Given a list of STRINGS create a menu string.
 
 The menu string will be segmented into columns. If COLS is given
 use at max COLS columns (defaults to 4). Decision for number of
-columns is based on WIDTH which default to frame width. Returns a
-cons cell with the number of columns created as the `car' and the
-menu string as `cdr'."
+columns is based on WIDTH which defaults to frame width. Returns
+a cons cell with the (columns . rows) created as the `car' and
+the menu string as `cdr'."
   (with-temp-buffer
     (let* ((length (apply 'max
                           (mapcar #'string-width strings)))
            (wwidth (or width (frame-width)))
            (columns (min (or cols 4) (/ wwidth (+ 2 length))))
+           (rows 1)
            (colwidth (/ wwidth columns))
            (column 0)
            (first t)
@@ -186,6 +190,7 @@ menu string as `cdr'."
               (if (or (< wwidth (+ (max colwidth length) column))
                       (zerop length))
                   (progn
+                    (cl-incf rows)
                     (insert "\n" (if (zerop length) "\n" ""))
                     (setq column 0))
                 (insert " \t")
@@ -195,13 +200,12 @@ menu string as `cdr'."
             (insert str)
             (setq column (+ column
                             (* colwidth (ceiling length colwidth)))))))
-      (cons columns (buffer-string)))))
+      (cons (cons columns rows) (buffer-string)))))
 
 ;; * Ivy explorer window, adapted from lv.el
 
 (defvar display-line-numbers)
 (defvar golden-ratio-mode)
-(defvar ivy-posframe-hide-minibuffer)
 
 (defvar ivy-explorer--window nil
   "Holds the current ivy explorer window.")
@@ -613,16 +617,17 @@ Call the permanent action if possible.")
                       (list "")))
          (menu (ivy-explorer--get-menu-string
                 strings ivy-explorer-max-columns))
-         (mcols (car menu))
+         (mcols (caar menu))
+         (mrows (cdar menu))
          (mstring (cdr menu)))
     (setq ivy-explorer--col-n mcols)
+    (setq ivy-explorer--row-n mrows)
     (funcall ivy-explorer-message-function mstring)))
 
 
 (defun ivy-explorer--internal (f &rest args)
   "Invoke ivy explorer for F with ARGS."
   (let ((ivy-display-function #'ivy-explorer--display-function)
-        (ivy-posframe-hide-minibuffer nil)
         (completing-read-function 'ivy-completing-read)
         ;; max number of candidates
         (ivy-height (funcall ivy-explorer-max-function))
