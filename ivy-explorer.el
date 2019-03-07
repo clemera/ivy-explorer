@@ -294,6 +294,12 @@ menu string as `cdr'."
   (list (cons #'ivy-explorer--lv-message
               #'ivy-explorer-avy-default-handler)))
 
+(defvar avy-all-windows)
+(defvar avy-keys)
+(defvar avy-keys-alist)
+(defvar avy-style)
+(defvar avy-styles-alist)
+(defvar avy-action)
 (defun ivy-explorer--avy ()
   (let* ((avy-all-windows nil)
          (avy-keys (or (cdr (assq 'ivy-avy avy-keys-alist))
