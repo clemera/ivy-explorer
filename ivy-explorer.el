@@ -85,6 +85,10 @@ By default you can choose between `ivy-explorer--posframe' and
   :group 'ivy-explorer
   :type 'function)
 
+(defcustom ivy-explorer-height ivy-height
+  "Height used if `ivy-explorer-message-function' has no dynamic height."
+  :type 'integer)
+
 (defcustom ivy-explorer-auto-init-avy nil
   "Whether to load grid views with avy selection enabled by default."
   :group 'ivy-explorer
@@ -149,12 +153,16 @@ Only the background color is significant."
 (push '(ivy-explorer--display-function :cleanup ivy-explorer--cleanup)
       ivy-display-functions-props)
 
+(defvar ivy-explorer--posframe-buffer
+  " *ivy-explorer-pos-frame-buffer*")
+
 (defun ivy-explorer--cleanup ()
   (when (and ivy-explorer-mode
              ;; TODO: add a user option?
              (string-match "posframe"
                            (symbol-name ivy-explorer-message-function)))
-    (ivy-posframe-cleanup)))
+    (when (ivy-posframe-workable-p)
+      (posframe-hide ivy-explorer--posframe-buffer))))
 
 ;; * Ivy explorer menu
 
@@ -301,13 +309,27 @@ the menu string as `cdr'."
 
 
 (defun ivy-explorer--posframe (msg)
-  (let ((ivy-posframe-width (frame-width)))
-    (ivy-posframe--display (concat "\n" msg)
-                           (lambda (info)
-                             (cons 0
-                                   (- 0
-                                      (plist-get info :mode-line-height)
-                                      (plist-get info :minibuffer-height)))))))
+  (unless (require 'posframe nil t)
+    (user-error "Posframe library not found"))
+  (with-selected-window (ivy--get-window ivy-last)
+    (posframe-show
+     ivy-explorer--posframe-buffer
+     :string
+     (with-current-buffer (get-buffer-create " *Minibuf-1*")
+       (let ((point (point))
+             (string (concat (buffer-string) "  \n" msg)))
+         (add-text-properties (- point 1) point '(face (:inherit cursor))
+                              string)
+         string))
+     :poshandler (lambda (info)
+                   (cons (frame-parameter nil 'left-fringe)
+                         (- 0
+                            (plist-get info :mode-line-height)
+                            (plist-get info :minibuffer-height))))
+     :background-color (face-attribute 'fringe :background)
+     :height ivy-explorer-height
+     :width (frame-width))))
+
 
 ;; * Minibuffer commands
 
@@ -362,8 +384,10 @@ the menu string as `cdr'."
       (ivy-explorer--avy-1 b))))
 
 (defun ivy-explorer-avy-posframe-handler ()
-  (let* ((w (ivy-posframe--window))
-         (b ivy-posframe-buffer))
+  (let* ((b ivy-explorer--posframe-buffer)
+         (w (frame-selected-window
+             (buffer-local-value 'posframe--frame
+                                 (get-buffer b)))))
     (with-selected-window w
       (ivy-explorer--avy-1 b ))))
 
@@ -629,6 +653,8 @@ Call the permanent action if possible.")
   "Invoke ivy explorer for F with ARGS."
   (let ((ivy-display-function #'ivy-explorer--display-function)
         (completing-read-function 'ivy-completing-read)
+        (ivy-posframe-hide-minibuffer
+         (eq ivy-explorer-message-function #'ivy-explorer--posframe))
         ;; max number of candidates
         (ivy-height (funcall ivy-explorer-max-function))
         (ivy-wrap nil)
