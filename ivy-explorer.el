@@ -290,6 +290,78 @@ menu string as `cdr'."
                       (if (characterp char) (string char) char))
              (throw 'done 'restart))))))
 
+(defvar ivy-explorer-avy-handler-alist
+  (list (cons #'ivy-explorer--lv-message
+              #'ivy-explorer-avy-default-handler)))
+
+(defun ivy-explorer--avy ()
+  (let* ((avy-all-windows nil)
+         (avy-keys (or (cdr (assq 'ivy-avy avy-keys-alist))
+                       avy-keys))
+         (avy-handler-function #'ivy-explorer--ace-handler)
+         (avy-pre-action #'ignore)
+         (avy-style (or (cdr (assq 'ivy-avy
+                                   avy-styles-alist))
+                        avy-style))
+         (avy-action #'identity)
+         (handler (cdr (assq ivy-explorer-message-function
+                             ivy-explorer-avy-handler-alist)))
+         (success (if handler (funcall handler)
+                    (user-error "No handler for %s found in `ivy-explorer-avy-handler-alist'"
+                                ivy-explorer-message-function))))
+    success))
+
+(defun ivy-explorer-avy-default-handler ()
+  (let* ((w (ivy-explorer--lv))
+         (b (window-buffer w)))
+    (with-selected-window w
+      (ivy-explorer--avy-1 b))))
+
+(defun ivy-explorer--avy-1 (&optional buffer)
+  (let ((candidate (avy--process
+                    (ivy-explorer--parse-avy-buffer buffer)
+                    (avy--style-fn avy-style))))
+    (when (number-or-marker-p candidate)
+      (prog1 t
+        (ivy-set-index
+         (get-text-property candidate 'ivy-explorer-count))))))
+
+
+(defun ivy-explorer--parse-avy-buffer (&optional buffer)
+  (let ((count 0)
+        (candidates ()))
+    (with-current-buffer (or buffer (current-buffer))
+      (save-excursion
+        (goto-char (point-min))
+        ;; ignore the first candidate if at ./
+        ;; this command is meant to be used for navigation
+        ;; navigate to same folder you are in makes no sense
+        (unless (looking-at "./")
+          (push (cons (point)
+                      (selected-window))
+                candidates)
+          (put-text-property
+           (point) (1+ (point)) 'ivy-explorer-count count))
+        (goto-char
+         (or (next-single-property-change
+              (point) 'mouse-face)
+             (point-max)))
+        (while (< (point) (point-max))
+          (unless (looking-at "[[:blank:]\r\n]\\|\\'")
+            (cl-incf count)
+            (put-text-property
+             (point) (1+ (point)) 'ivy-explorer-count count)
+            (push
+             (cons (point)
+                   (selected-window))
+             candidates))
+          (goto-char
+           (or (next-single-property-change
+                (point)
+                'mouse-face)
+               (point-max))))))
+    (nreverse candidates)))
+
 
 ;; Ivy explorer avy, adapted from ivy-avy
 (defun ivy-explorer-avy (&optional action)
@@ -302,64 +374,15 @@ style with C-g.
 If called from code ACTION is the action to trigger afterwards,
 in this case `avy' is not invoked again."
   (interactive)
-  (when (with-selected-window (ivy-explorer--lv)
-          (unless (require 'avy nil 'noerror)
-            (error "Package avy isn't installed"))
-          (let* ((avy-all-windows nil)
-                 (avy-keys (or (cdr (assq 'ivy-avy avy-keys-alist))
-                               avy-keys))
-                 (avy-handler-function #'ivy-explorer--ace-handler)
-                 (avy-style (or (cdr (assq 'ivy-avy
-                                           avy-styles-alist))
-                                avy-style))
-                 (count 0)
-                 (candidate
-                  (let ((candidates))
-                    (save-excursion
-                      (goto-char (point-min))
-                      ;; ignore the first candidate if at ./
-                      ;; this command is meant to be used for navigation
-                      ;; navigate to same folder you are in makes no sense
-                      (unless (looking-at "./")
-                        (push (cons (point)
-                                    (selected-window))
-                              candidates)
-                        (put-text-property
-                         (point) (1+ (point)) 'ivy-explorer-count count))
-                      (goto-char
-                       (or (next-single-property-change
-                            (point) 'mouse-face)
-                           (point-max)))
-                      (while (< (point) (point-max))
-                        (unless (looking-at "[[:blank:]\r\n]\\|\\'")
-                          (cl-incf count)
-                          (put-text-property
-                           (point) (1+ (point)) 'ivy-explorer-count count)
-                          (push
-                           (cons (point)
-                                 (selected-window))
-                           candidates))
-                        (goto-char
-                         (or (next-single-property-change
-                              (point)
-                              'mouse-face)
-                             (point-max)))))
-                    (setq avy-action #'identity)
-                    (avy--process
-                     (nreverse candidates)
-                     (avy--style-fn avy-style)))))
-            (when (number-or-marker-p candidate)
-              (prog1 candidate
-                (ivy-set-index
-                 (get-text-property candidate 'ivy-explorer-count))))))
+  (unless (require 'avy nil 'noerror)
+    (error "Package avy isn't installed"))
+  (when (ivy-explorer--avy)
     (ivy--exhibit)
     (funcall (or action #'ivy-alt-done))
     (unless action
       (ivy-explorer-avy))))
 
 ;; adapted from ivy-hydra
-
-
 (defun ivy-explorer-avy-dispatching-done-hydra ()
   "Choose action and afterwards target using `hydra'."
   (interactive)
