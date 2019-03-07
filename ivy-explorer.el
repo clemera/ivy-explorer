@@ -78,7 +78,10 @@ Line is drawn between the ivy explorer window and the Echo Area."
   :type 'function)
 
 (defcustom ivy-explorer-message-function #'ivy-explorer--lv-message
-  "Function to be used for grid display."
+  "Function to be used for grid display.
+
+By default you can choose between `ivy-explorer--posframe' and
+`ivy-explorer--lv-message'."
   :group 'ivy-explorer
   :type 'function)
 
@@ -86,6 +89,19 @@ Line is drawn between the ivy explorer window and the Echo Area."
   "Whether to load grid views with avy selection enabled by default."
   :group 'ivy-explorer
   :type 'boolean)
+
+(defcustom ivy-explorer-avy-handler-alist
+  (list (cons #'ivy-explorer--lv-message
+              #'ivy-explorer-avy-default-handler)
+        (cons #'ivy-explorer--posframe
+              #'ivy-explorer-avy-posframe-handler))
+  "Alist which maps message functions to avy handlers.
+
+The message functions are the candidates for
+`ivy-explorer-message-function'. When avy selection command is
+invoked the corresponding handler gets used."
+  :type '(alist :key-type function
+                :value-type function))
 
 (defface ivy-explorer-separator
   (if (featurep 'lv)
@@ -127,6 +143,18 @@ Only the background color is significant."
       (define-key map (kbd "C-M-n") 'ivy-explorer-next-and-call)
       (define-key map (kbd "C-M-p") 'ivy-explorer-previous-and-call)))
   "Keymap used in the minibuffer for function/`ivy-explorer-mode'.")
+
+;; * Ivy settings
+
+(push '(ivy-explorer--display-function :cleanup ivy-explorer--cleanup)
+      ivy-display-functions-props)
+
+(defun ivy-explorer--cleanup ()
+  (when (and ivy-explorer-mode
+             ;; TODO: add a user option?
+             (string-match "posframe"
+                           (symbol-name ivy-explorer-message-function)))
+    (ivy-posframe-cleanup)))
 
 ;; * Ivy explorer menu
 
@@ -268,6 +296,15 @@ menu string as `cdr'."
       (kill-buffer buf))))
 
 
+(defun ivy-explorer--posframe (msg)
+  (let ((ivy-posframe-width (frame-width)))
+    (ivy-posframe--display (concat "\n" msg)
+                           (lambda (info)
+                             (cons 0
+                                   (- 0
+                                      (plist-get info :mode-line-height)
+                                      (plist-get info :minibuffer-height)))))))
+
 ;; * Minibuffer commands
 
 (defun ivy-explorer--ace-handler (char)
@@ -290,9 +327,6 @@ menu string as `cdr'."
                       (if (characterp char) (string char) char))
              (throw 'done 'restart))))))
 
-(defvar ivy-explorer-avy-handler-alist
-  (list (cons #'ivy-explorer--lv-message
-              #'ivy-explorer-avy-default-handler)))
 
 (defvar avy-all-windows)
 (defvar avy-keys)
@@ -323,49 +357,58 @@ menu string as `cdr'."
     (with-selected-window w
       (ivy-explorer--avy-1 b))))
 
-(defun ivy-explorer--avy-1 (&optional buffer)
+(defun ivy-explorer-avy-posframe-handler ()
+  (let* ((w (ivy-posframe--window))
+         (b ivy-posframe-buffer))
+    (with-selected-window w
+      (ivy-explorer--avy-1 b ))))
+
+(defun ivy-explorer--avy-1 (&optional buffer start end)
   (let ((candidate (avy--process
-                    (ivy-explorer--parse-avy-buffer buffer)
+                    (ivy-explorer--parse-avy-buffer buffer start end)
                     (avy--style-fn avy-style))))
     (when (number-or-marker-p candidate)
       (prog1 t
         (ivy-set-index
          (get-text-property candidate 'ivy-explorer-count))))))
 
-
-(defun ivy-explorer--parse-avy-buffer (&optional buffer)
+(defun ivy-explorer--parse-avy-buffer (&optional buffer start end)
   (let ((count 0)
-        (candidates ()))
+        (candidates ())
+        (start (or start (point-min)))
+        (end (or end (point-max))))
     (with-current-buffer (or buffer (current-buffer))
       (save-excursion
-        (goto-char (point-min))
-        ;; ignore the first candidate if at ./
-        ;; this command is meant to be used for navigation
-        ;; navigate to same folder you are in makes no sense
-        (unless (looking-at "./")
-          (push (cons (point)
-                      (selected-window))
-                candidates)
-          (put-text-property
-           (point) (1+ (point)) 'ivy-explorer-count count))
-        (goto-char
-         (or (next-single-property-change
-              (point) 'mouse-face)
-             (point-max)))
-        (while (< (point) (point-max))
-          (unless (looking-at "[[:blank:]\r\n]\\|\\'")
-            (cl-incf count)
+        (save-restriction
+          (narrow-to-region start end)
+          (goto-char (point-min))
+          ;; ignore the first candidate if at ./
+          ;; this command is meant to be used for navigation
+          ;; navigate to same folder you are in makes no sense
+          (unless (search-forward "./" nil t)
+            (push (cons (point)
+                        (selected-window))
+                  candidates)
             (put-text-property
-             (point) (1+ (point)) 'ivy-explorer-count count)
-            (push
-             (cons (point)
-                   (selected-window))
-             candidates))
+             (point) (1+ (point)) 'ivy-explorer-count count))
           (goto-char
            (or (next-single-property-change
-                (point)
-                'mouse-face)
-               (point-max))))))
+                (point) 'mouse-face)
+               (point-max)))
+          (while (< (point) (point-max))
+            (unless (looking-at "[[:blank:]\r\n]\\|\\'")
+              (cl-incf count)
+              (put-text-property
+               (point) (1+ (point)) 'ivy-explorer-count count)
+              (push
+               (cons (point)
+                     (selected-window))
+               candidates))
+            (goto-char
+             (or (next-single-property-change
+                  (point)
+                  'mouse-face)
+                 (point-max)))))))
     (nreverse candidates)))
 
 
@@ -636,6 +679,7 @@ INITIAL-INPUT is passed to `counsel-find-file'."
 (defvar ivy-explorer--default nil
   "Saves user configured `read-file-name-function'.")
 
+
 ;;;###autoload
 (define-minor-mode ivy-explorer-mode
   "Globally enable `ivy-explorer' for file navigation.
@@ -663,3 +707,8 @@ See `ivy-explorer-map' for bindings used in the minibuffer."
 
 (provide 'ivy-explorer)
 ;;; ivy-explorer.el ends here
+
+
+
+
+
