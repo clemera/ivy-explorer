@@ -672,12 +672,17 @@ Call the permanent action if possible.")
 (defun ivy-explorer-dispatching-done ()
   "Select one of the available actions and call `ivy-done'."
   (interactive)
-  (let ((window (selected-window)))
-    (unwind-protect
-        (when (ivy-read-action)
-          (ivy-done))
-      (when (window-live-p window)
-        (window-resize nil (- 1 (window-height)))))))
+  (cond ((get-buffer ivy-explorer--posframe-buffer)
+         (unless (require 'ivy-posframe nil t)
+           (user-error "Ivy posframe not found"))
+         (ivy-posframe-dispatching-done))
+        (t
+         (let ((window (selected-window)))
+           (unwind-protect
+               (when (ivy-read-action)
+                 (ivy-done))
+             (when (window-live-p window)
+               (window-resize nil (- 1 (window-height)))))))))
 
 
 (defun ivy-explorer (&rest args)
