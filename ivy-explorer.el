@@ -68,7 +68,10 @@ Line is drawn between the ivy explorer window and the Echo Area."
   :type 'boolean)
 
 (defcustom ivy-explorer-max-columns 5
-  "If given the maximal number of columns to use."
+  "If given the maximal number of columns to use.
+
+If the grid does not fit on the screen the number of columns is
+adjusted to a lower number automatically."
   :group 'ivy-explorer
   :type 'integer)
 
@@ -657,11 +660,14 @@ Call the permanent action if possible.")
 
 
 (defun ivy-explorer-read (prompt coll &optional avy mcols)
-  "Read value from a grid.
+  "Read value from an explorer grid.
 
 PROMPT and COLL are the same as for `completing-read'. If AVY is
-non-nil the grid is initilized with avy selection. MCOLS is the maximal
-number of columns to use and defaults to (/ (frame-width) 30)."
+non-nil the grid is initilized with avy selection. MCOLS is the
+number of columns to use. If the grid does not fit on the screen
+the number of columns is adjusted to a lower number
+automatically. If not given the the value is calculated
+by (/ (frame-width) 30)."
   (let ((ivy-explorer-auto-init-avy avy)
         (ivy-explorer-max-columns (or mcols (/ (frame-width) 30))))
     (ivy-explorer--internal #'completing-read prompt coll)))
