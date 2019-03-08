@@ -504,7 +504,11 @@ in this case `avy' is not invoked again."
        'ivy-explorer-avy-dispatching-done-hydra)
     (ivy-explorer-avy
      (lambda ()
-       (let ((action (ivy-read-action)))
+       (let ((action (if (get-buffer ivy-explorer--posframe-buffer)
+                         (progn (unless (require 'ivy-posframe nil t)
+                                  (user-error "Ivy posframe not found"))
+                                (ivy-posframe-read-action))
+                       (ivy-read-action))))
          (when action
            (ivy-set-action action)
            (ivy-done)))))))
