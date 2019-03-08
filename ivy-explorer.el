@@ -393,7 +393,8 @@ the menu string as `cdr'."
                                (save-excursion
                                  (goto-char (point-min))
                                  (forward-line 1)
-                                 (point)))))))
+                                 (point)))
+                           (window-end w)))))
 
 (defun ivy-explorer--avy-1 (&optional buffer start end)
   (let ((candidate (avy--process
