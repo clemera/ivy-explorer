@@ -656,6 +656,17 @@ Call the permanent action if possible.")
     (funcall ivy-explorer-message-function mstring)))
 
 
+(defun ivy-explorer-read (prompt coll &optional avy mcols)
+  "Read value from a grid.
+
+PROMPT and COLL are the same as for `completing-read'. If AVY is
+non-nil the grid is initilized with avy selection. MCOLS is the maximal
+number of columns to use and defaults to (/ (frame-width) 30)."
+  (let ((ivy-explorer-auto-init-avy avy)
+        (ivy-explorer-max-columns (or mcols (/ (frame-width) 30))))
+    (ivy-explorer--internal #'completing-read prompt coll)))
+
+
 (defun ivy-explorer--internal (f &rest args)
   "Invoke ivy explorer for F with ARGS."
   (let ((ivy-display-function #'ivy-explorer--display-function)
