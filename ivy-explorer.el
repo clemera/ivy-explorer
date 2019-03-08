@@ -460,9 +460,7 @@ in this case `avy' is not invoked again."
     (error "Package avy isn't installed"))
   (when (ivy-explorer--avy)
     (ivy--exhibit)
-    (funcall (or action #'ivy-alt-done))
-    (unless action
-      (ivy-explorer-avy))))
+    (funcall (or action #'ivy-alt-done))))
 
 ;; adapted from ivy-hydra
 (defun ivy-explorer-avy-dispatching-done-hydra ()
