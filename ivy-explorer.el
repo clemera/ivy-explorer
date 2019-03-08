@@ -663,7 +663,7 @@ Call the permanent action if possible.")
     (funcall ivy-explorer-message-function mstring)))
 
 
-(defun ivy-explorer-read (prompt coll &optional avy mcols width)
+(defun ivy-explorer-read (prompt coll &optional avy mcols width height)
   "Read value from an explorer grid.
 
 PROMPT and COLL are the same as for `ivy-read'. If AVY is non-nil
@@ -675,9 +675,13 @@ automatically. If not given the the value is calculated
 by (/ (frame-width) 30)
 
 WIDTH is the width to be used to create the grid and defaults to
-frame-width."
+frame-width.
+
+Height is the height for the grid display and defaults to
+ivy-height."
   (let ((ivy-explorer-max-columns (or mcols (/ (frame-width) 30)))
         (ivy-wrap nil)
+        (ivy-explorer-height (or height ivy-height))
         (ivy-explorer-width (or width (frame-width)))
         (ivy-height (funcall ivy-explorer-max-function))
         (ivy-display-function #'ivy-explorer--display-function)
