@@ -75,6 +75,10 @@ adjusted to a lower number automatically."
   :group 'ivy-explorer
   :type 'integer)
 
+(defcustom ivy-explorer-width (frame-width)
+  "Width used to display the grid."
+  :type 'integer)
+
 (defcustom ivy-explorer-max-function #'ivy-explorer-max
   "Function which should return max number of canidates."
   :group 'ivy-explorer
@@ -650,7 +654,7 @@ Call the permanent action if possible.")
   (let* ((strings (or (split-string text "\n" t)
                       (list "")))
          (menu (ivy-explorer--get-menu-string
-                strings ivy-explorer-max-columns))
+                strings ivy-explorer-max-columns ivy-explorer-width))
          (mcols (caar menu))
          (mrows (cdar menu))
          (mstring (cdr menu)))
@@ -659,16 +663,22 @@ Call the permanent action if possible.")
     (funcall ivy-explorer-message-function mstring)))
 
 
-(defun ivy-explorer-read (prompt coll &optional avy mcols)
+(defun ivy-explorer-read (prompt coll &optional avy mcols width)
   "Read value from an explorer grid.
 
 PROMPT and COLL are the same as for `ivy-read'. If AVY is non-nil
-the grid is initilized with avy selection. MCOLS is the number of
-columns to use. If the grid does not fit on the screen the number
-of columns is adjusted to a lower number automatically. If not
-given the the value is calculated by (/ (frame-width) 30)."
+the grid is initilized with avy selection.
+
+MCOLS is the number of columns to use. If the grid does not fit
+on the screen the number of columns is adjusted to a lower number
+automatically. If not given the the value is calculated
+by (/ (frame-width) 30)
+
+WIDTH is the width to be used to create the grid and defaults to
+frame-width."
   (let ((ivy-explorer-max-columns (or mcols (/ (frame-width) 30)))
         (ivy-wrap nil)
+        (ivy-explorer-width (or width (frame-width)))
         (ivy-height (funcall ivy-explorer-max-function))
         (ivy-display-function #'ivy-explorer--display-function)
         (ivy-posframe-hide-minibuffer
