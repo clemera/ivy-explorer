@@ -530,6 +530,7 @@ in this case `avy' is not invoked again."
            (ivy-set-action action)
            (ivy-done)))))))
 
+(declare-function dired-goto-file "ext:dired")
 (defun ivy-explorer-dired ()
   "Open current directory in `dired'.
 
