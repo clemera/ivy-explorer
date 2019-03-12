@@ -165,11 +165,11 @@ Only the background color is significant."
 
 (defun ivy-explorer--cleanup ()
   (when (and ivy-explorer-mode
-             ;; TODO: add a user option?
+             (eq ivy-explorer-message-function
+                 #'ivy-explorer--posframe)
              (string-match "posframe"
                            (symbol-name ivy-explorer-message-function)))
-    (when (ivy-posframe-workable-p)
-      (posframe-hide ivy-explorer--posframe-buffer))))
+    (posframe-hide ivy-explorer--posframe-buffer)))
 
 ;; * Ivy explorer menu
 
