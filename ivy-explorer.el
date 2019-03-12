@@ -331,10 +331,21 @@ the menu string as `cdr'."
      :poshandler (lambda (info)
                    (cons (frame-parameter nil 'left-fringe)
                          (- 0
+                            ;; TODO: calculate based on ivy-explorer-height
                             (plist-get info :mode-line-height)
                             (plist-get info :minibuffer-height))))
-     :background-color (face-attribute 'fringe :background)
+     :background-color (or (and (facep 'ivy-posframe)
+                                (face-attribute 'ivy-posframe :background))
+                           (face-attribute 'fringe :background))
+     :foreground-color (or (and (facep 'ivy-posframe)
+                                (face-attribute 'ivy-posframe :foreground)
+                                (face-attribute 'default :foreground)))
+     :internal-border-width (or (and (bound-and-true-p ivy-posframe-border-width)
+                                     ivy-posframe-border-width)
+                                0)
      :height ivy-explorer-height
+     :left-fringe (frame-parameter nil 'left-fringe)
+     :right-fringe (frame-parameter nil 'right-fringe)
      :width (frame-width))))
 
 
