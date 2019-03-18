@@ -131,8 +131,8 @@ Only the background color is significant."
       (define-key map (kbd "C-j") 'ivy-explorer-alt-done)
       (define-key map (kbd "C-x d") 'ivy-explorer-dired)
 
-      (define-key map (kbd "C-x o") 'ivy-explorer-select-lv)
-      (define-key map (kbd "'") 'ivy-explorer-select-lv)
+      (define-key map (kbd "C-x o") 'ivy-explorer-other-window)
+      (define-key map (kbd "'") 'ivy-explorer-other-window)
 
       (define-key map (kbd "M-o") 'ivy-explorer-dispatching-done)
       (define-key map (kbd "C-'") 'ivy-explorer-avy)
@@ -656,9 +656,12 @@ Call the permanent action if possible.")
 
 ;; * Ivy explorer mode
 
-(defun ivy-explorer-select-lv ()
+(defun ivy-explorer-other-window ()
   (interactive)
-  (select-window (get-buffer-window " *ivy-explorer*")))
+  (let ((w (or (get-buffer-window " *ivy-explorer*")
+               (get-buffer-window (ivy-state-buffer ivy-last)))))
+    (when (window-live-p w)
+      (select-window w))))
 
 (defun ivy-explorer-max ()
   "Default for `ivy-explorer-max-function'."
