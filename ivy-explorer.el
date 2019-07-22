@@ -707,6 +707,8 @@ MSGF is the function to be called with the grid string and defaults to
         (ivy-explorer-width (or width (frame-width)))
         (ivy-height (funcall ivy-explorer-max-function))
         (ivy-display-function #'ivy-explorer--display-function)
+        (ivy-display-functions-alist '((t . ivy-explorer--display-function)))
+        (ivy-posframe-display-functions-alist nil)
         (ivy-posframe-hide-minibuffer
          (eq ivy-explorer-message-function #'ivy-explorer--posframe))
         (ivy-minibuffer-map (make-composed-keymap
@@ -719,6 +721,8 @@ MSGF is the function to be called with the grid string and defaults to
 (defun ivy-explorer--internal (f &rest args)
   "Invoke ivy explorer for F with ARGS."
   (let ((ivy-display-function #'ivy-explorer--display-function)
+        (ivy-display-functions-alist '((t . ivy-explorer--display-function)))
+        (ivy-posframe-display-functions-alist nil)
         (completing-read-function 'ivy-completing-read)
         (ivy-posframe-hide-minibuffer
          (eq ivy-explorer-message-function #'ivy-explorer--posframe))
