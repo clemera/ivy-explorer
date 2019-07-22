@@ -711,6 +711,7 @@ MSGF is the function to be called with the grid string and defaults to
         (ivy-posframe-display-functions-alist nil)
         (ivy-posframe-hide-minibuffer
          (eq ivy-explorer-message-function #'ivy-explorer--posframe))
+        (ivy-posframe--display-p t)
         (ivy-minibuffer-map (make-composed-keymap
                              ivy-explorer-map ivy-minibuffer-map)))
     (when avy
@@ -726,6 +727,7 @@ MSGF is the function to be called with the grid string and defaults to
         (completing-read-function 'ivy-completing-read)
         (ivy-posframe-hide-minibuffer
          (eq ivy-explorer-message-function #'ivy-explorer--posframe))
+        (ivy-posframe--display-p t)
         ;; max number of candidates
         (ivy-height (funcall ivy-explorer-max-function))
         (ivy-wrap nil)
