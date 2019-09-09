@@ -285,7 +285,8 @@ the menu string as `cdr'."
 
 (defun ivy-explorer--lv-message (str)
   "Set ivy explorer window contents to string STR."
-  (let* ((n-lines (cl-count ?\n str))
+  (let* ((str (substring str 1))
+         (n-lines (cl-count ?\n str))
          (window-size-fixed nil)
          deactivate-mark
          golden-ratio-mode)
@@ -327,7 +328,7 @@ the menu string as `cdr'."
      :string
      (with-current-buffer (get-buffer-create " *Minibuf-1*")
        (let ((point (point))
-             (string (concat (buffer-string) "  \n" msg)))
+             (string (concat (buffer-string) " " msg)))
          (add-text-properties (- point 1) point '(face (:inherit cursor))
                               string)
          string))
@@ -678,7 +679,7 @@ Call the permanent action if possible.")
          (mstring (cdr menu)))
     (setq ivy-explorer--col-n mcols)
     (setq ivy-explorer--row-n mrows)
-    (funcall ivy-explorer-message-function mstring)))
+    (funcall ivy-explorer-message-function (concat "\n" mstring))))
 
 
 (defun ivy-explorer-read (prompt coll &optional avy msgf mcols width height)
